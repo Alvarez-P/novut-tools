@@ -18,7 +18,8 @@ const ResponseBuilder = (Context) => {
     return {
       success: (message = 'ok') => setStatus('success', message, 200),
       error: (message = 'bad request') => setStatus('error', message, 400),
-      warning: (message = 'internal server error') => setStatus('warning', message, 500),
+      warning: (message = 'internal server error') =>
+        setStatus('warning', message, 500),
       info: (message = 'continue') => setStatus('info', message, 100),
     }
   }
@@ -27,7 +28,8 @@ const ResponseBuilder = (Context) => {
     return {
       success: (message = 'ok') => setStatus('success', message, 200),
       error: (message = 'bad request') => setStatus('error', message, 400),
-      warning: (message = 'internal server error') => setStatus('warning', message, 500),
+      warning: (message = 'internal server error') =>
+        setStatus('warning', message, 500),
       info: (message = 'continue') => setStatus('info', message, 100),
     }
   }
@@ -42,7 +44,7 @@ const ResponseBuilder = (Context) => {
       callback,
       get,
       done,
-      code: errCode
+      code: errCode,
     }
   }
   const errCode = (errCode) => {
@@ -53,7 +55,7 @@ const ResponseBuilder = (Context) => {
       body,
       callback,
       get,
-      done
+      done,
     }
   }
 
@@ -116,8 +118,9 @@ const ResponseBuilder = (Context) => {
     return Response.Request
   }
   const done = () => {
-    Response.Context.res = Response.Request
-    Response.Context.done()
+    Context.set(Response.Request.headers)
+      .status(Response.Request.status)
+      .json(Response.Request.body)
   }
   return { notification, alert }
 }
