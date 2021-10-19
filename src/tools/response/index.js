@@ -1,5 +1,7 @@
+const frameworkValidator = require('./framework.validation')
+
 const ResponseBuilder = (Context) => {
-  const Response = {
+  const Builder = {
     Context,
     Request: {
       body: {
@@ -14,7 +16,7 @@ const ResponseBuilder = (Context) => {
 
   //Types
   const notification = () => {
-    Response.Request.body.type = 'notification'
+    Builder.Request.body.type = 'notification'
     return {
       success: (message = 'ok') => setStatus('success', message, 200),
       error: (message = 'bad request') => setStatus('error', message, 400),
@@ -24,7 +26,7 @@ const ResponseBuilder = (Context) => {
     }
   }
   const alert = () => {
-    Response.Request.body.type = 'alert'
+    Builder.Request.body.type = 'alert'
     return {
       success: (message = 'ok') => setStatus('success', message, 200),
       error: (message = 'bad request') => setStatus('error', message, 400),
@@ -34,9 +36,9 @@ const ResponseBuilder = (Context) => {
     }
   }
   const setStatus = (status, message, code) => {
-    Response.Request.body.status = status
-    Response.Request.body.message = message
-    Response.Request.status = code
+    Builder.Request.body.status = status
+    Builder.Request.body.message = message
+    Builder.Request.status = code
     return {
       statusCode,
       headers,
@@ -48,7 +50,7 @@ const ResponseBuilder = (Context) => {
     }
   }
   const errCode = (errCode) => {
-    Response.Request.body.code = errCode
+    Builder.Request.body.code = errCode
     return {
       statusCode,
       headers,
@@ -61,7 +63,7 @@ const ResponseBuilder = (Context) => {
 
   // Request props
   const body = (data) => {
-    Response.Request.body.data = data
+    Builder.Request.body.data = data
     return {
       statusCode,
       headers,
@@ -72,7 +74,7 @@ const ResponseBuilder = (Context) => {
     }
   }
   const headers = (hdrs) => {
-    Response.Request.headers = hdrs
+    Builder.Request.headers = hdrs
     return {
       body,
       statusCode,
@@ -83,7 +85,7 @@ const ResponseBuilder = (Context) => {
     }
   }
   const statusCode = (code) => {
-    Response.Request.status = code
+    Builder.Request.status = code
     return {
       body,
       headers,
@@ -96,7 +98,7 @@ const ResponseBuilder = (Context) => {
 
   // Extends
   const json = () => {
-    Response.Request.body = JSON.stringify(Response.Request.body)
+    Builder.Request.body = JSON.stringify(Builder.Request.body)
     return {
       statusCode,
       headers,
@@ -106,7 +108,7 @@ const ResponseBuilder = (Context) => {
     }
   }
   const callback = (work) => {
-    work(Response.Request)
+    work(Builder.Request)
     return {
       get,
       done,
@@ -115,12 +117,25 @@ const ResponseBuilder = (Context) => {
 
   // Build
   const get = () => {
-    return Response.Request
+    return Builder.Request
   }
   const done = () => {
-    Context.set(Response.Request.headers)
-      .status(Response.Request.status)
-      .json(Response.Request.body)
+    if (frameworkValidator.isExpress(Builder.Context)) {
+      Builder.Context.set(Builder.Request.headers)
+        .status(Builder.Request.status)
+        .json(Builder.Request.body)
+    }
+    else if (frameworkValidator.isServerless(Builder.Context)) {
+      return {
+        statusCode: Builder.Request.status,
+        body: JSON.stringify(Builder.Request.body),
+        headers: Builder.Request.headers
+      }
+    }
+    else if (frameworkValidator.isAzure(Builder.Context)) {
+      Builder.Context.res = Builder.Request
+      Builder.Context.done()
+    }
   }
   return { notification, alert }
 }
