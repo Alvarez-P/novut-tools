@@ -136,6 +136,9 @@ const ResponseBuilder = (Context) => {
       Builder.Context.res = Builder.Request
       Builder.Context.done()
     }
+    else {
+      throw new Error('Framework not recognized')
+    }
   }
   return { notification, alert }
 }
